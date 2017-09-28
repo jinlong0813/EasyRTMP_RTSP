@@ -216,6 +216,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     void StopPushing(){
-        mStreamHamal.stop();
+        if(mStreamHamal != null) {
+            mStreamHamal.stop();
+            mStreamHamal = null;
+        }
     }
 }
