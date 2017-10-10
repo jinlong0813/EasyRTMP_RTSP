@@ -97,9 +97,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                     case EasyRTSPClient.RESULT_EVENT:
                         int errorcode = resultData.getInt("errorcode");
-                        if (errorcode != 0){
-                            StopPushing();
-                        }
+//                        if (errorcode != 0){
+//                            StopPushing();
+//                        }
                         MainActivity.this.onEvent(resultData.getString("event-msg"));
                         break;
                     case EasyRTMP.MSG.EasyRTMP_VideoInfo:
