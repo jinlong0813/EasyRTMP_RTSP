@@ -14,6 +14,6 @@ WEB：[www.EasyDarwin.org](http://www.easydarwin.org)
 
 QQ交流群：[587254841](https://jq.qq.com/?_wv=1027&k=4ASE72a)
 
-Copyright &copy; EasyDarwin.org 2012-2017
+Copyright &copy; EasyDarwin.org 2012-2018
 
 ![EasyDarwin](http://www.easydarwin.org/skin/easydarwin/images/wx_qrcode.jpg)

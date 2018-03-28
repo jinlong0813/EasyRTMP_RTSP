@@ -1008,13 +1008,13 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                 mPusher.initPush(mRtmpUrl, mContext, mRtmpCallBack);
             }
 //            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
-//            try {
+//            try {frameInfo.stamp
 //                mQueue.put(frameInfo);
 //            } catch (InterruptedException e) {
 //                e.printStackTrace();
 //            }
             if(mPusher != null) {
-                mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, 0, EasyRTMP.FrameType.FRAME_TYPE_VIDEO);
+                mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, frameInfo.stamp, EasyRTMP.FrameType.FRAME_TYPE_VIDEO);
             }
         } else if (_frameType == RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG) {
             mNewestStample = frameInfo.stamp;
