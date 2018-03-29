@@ -952,7 +952,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             }
 
 //            boolean firstFrame = mNewestStample == 0;
-            mNewestStample = frameInfo.stamp;
+            frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
             frameInfo.audio = false;
             if (mWaitingKeyFrame) {
 
@@ -1017,7 +1017,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                 mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, frameInfo.stamp, EasyRTMP.FrameType.FRAME_TYPE_VIDEO);
             }
         } else if (_frameType == RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG) {
-            mNewestStample = frameInfo.stamp;
+            frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
             frameInfo.audio = true;
 
             if(frameInfo.codec == EASY_SDK_AUDIO_CODEC_AAC){
