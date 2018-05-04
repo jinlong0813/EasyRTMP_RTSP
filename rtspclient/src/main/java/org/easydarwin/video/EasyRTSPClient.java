@@ -952,6 +952,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             }
 
 //            boolean firstFrame = mNewestStample == 0;
+//            boolean firstFrame = mNewestStample == 0;
             frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
             frameInfo.audio = false;
             if (mWaitingKeyFrame) {
@@ -1005,7 +1006,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                     }
                 }
 
-                mPusher.initPush(mRtmpUrl, mContext, mRtmpCallBack);
+                mPusher.initPush(mRtmpUrl, mContext, mRtmpCallBack, 25, mMediaInfo.sample, mMediaInfo.channel);
             }
 //            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
 //            try {frameInfo.stamp
