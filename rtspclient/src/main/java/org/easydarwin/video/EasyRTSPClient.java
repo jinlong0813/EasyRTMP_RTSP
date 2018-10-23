@@ -941,19 +941,11 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                 }
             }
 
-//            int offset = frameInfo.offset;
-//            byte nal_unit_type = (byte) (frameInfo.buffer[offset + 4] & (byte) 0x1F);
-//            if (nal_unit_type == 7 || nal_unit_type == 5) {
-//                Log.i(TAG,String.format("recv I frame"));
-//            }
-
             if (frameInfo.type == 1) {
                 Log.i(TAG, String.format("recv I frame"));
             }
 
-//            boolean firstFrame = mNewestStample == 0;
-//            boolean firstFrame = mNewestStample == 0;
-            frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
+            //frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
             frameInfo.audio = false;
             if (mWaitingKeyFrame) {
 
@@ -964,34 +956,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                 mWidth = frameInfo.width;
                 mHeight = frameInfo.height;
 
-
                 Log.i(TAG, String.format("width:%d,height:%d", mWidth, mHeight));
-
-//                byte[] dataOut = new byte[128];
-//                int[] outLen = new int[]{128};
-//                int result = getXPS(frameInfo.buffer, 0, frameInfo.buffer.length, dataOut, outLen, 7);
-//                if (result >= 0) {
-//                    ByteBuffer csd0 = ByteBuffer.allocate(outLen[0]);
-//                    csd0.put(dataOut, 0, outLen[0]);
-//                    csd0.clear();
-//                    mCSD0 = csd0;
-//                    Log.i(TAG, String.format("CSD-0 searched"));
-//                }
-//                outLen[0] = 128;
-//                result = getXPS(frameInfo.buffer, 0, frameInfo.buffer.length, dataOut, outLen, 8);
-//                if (result >= 0) {
-//                    ByteBuffer csd1 = ByteBuffer.allocate(outLen[0]);
-//                    csd1.put(dataOut, 0, outLen[0]);
-//                    csd1.clear();
-//                    mCSD1 = csd1;
-//                    Log.i(TAG, String.format("CSD-1 searched"));
-//                }
-//
-//                if (false) {
-//                    int off = (result - frameInfo.offset);
-//                    frameInfo.offset += off;
-//                    frameInfo.length -= off;
-//                }
                 Log.i(TAG, String.format("RESULT_VIDEO_SIZE:%d*%d", frameInfo.width, frameInfo.height));
                 if (rr != null) rr.send(RESULT_VIDEO_SIZE, bundle);
 
@@ -1008,22 +973,17 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
 
                 mPusher.initPush(mRtmpUrl, mContext, mRtmpCallBack, 25, mMediaInfo.sample, mMediaInfo.channel);
             }
-//            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
-//            try {frameInfo.stamp
-//                mQueue.put(frameInfo);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+
             if(mPusher != null) {
-                mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, frameInfo.stamp, EasyRTMP.FrameType.FRAME_TYPE_VIDEO);
+                mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, 0, EasyRTMP.FrameType.FRAME_TYPE_VIDEO);
             }
         } else if (_frameType == RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG) {
-            frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
+            //frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
             frameInfo.audio = true;
 
             if(frameInfo.codec == EASY_SDK_AUDIO_CODEC_AAC){
                 if(mPusher != null) {
-                    mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, frameInfo.stamp, EasyRTMP.FrameType.FRAME_TYPE_AUDIO);
+                    mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, 0, EasyRTMP.FrameType.FRAME_TYPE_AUDIO);
                 }
             } else if(frameInfo.codec == EASY_SDK_AUDIO_CODEC_G711A ||
                     frameInfo.codec == EASY_SDK_AUDIO_CODEC_G711U ||
