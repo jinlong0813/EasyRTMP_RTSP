@@ -25,8 +25,8 @@ import android.widget.TextView;
 import org.easydarwin.easyrtmp.push.EasyRTMP;
 import org.easydarwin.easyrtmp.push.InitCallback;
 import org.easydarwin.easyrtmp.push.Pusher;
+import org.easydarwin.video.Client;
 import org.easydarwin.video.EasyRTSPClient;
-import org.easydarwin.video.RTSPClient;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mResultReceiver.send(EasyRTSPClient.RESULT_EVENT, resultData);
             }
         });
-        mStreamHamal.start(rtsp, RTSPClient.TRANSTYPE_TCP, RTSPClient.EASY_SDK_VIDEO_FRAME_FLAG | RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG, "", "");
+        mStreamHamal.start(rtsp, Client.TRANSTYPE_TCP, Client.EASY_SDK_VIDEO_FRAME_FLAG | Client.EASY_SDK_AUDIO_FRAME_FLAG, "", "");
     }
 
     void StopPushing(){

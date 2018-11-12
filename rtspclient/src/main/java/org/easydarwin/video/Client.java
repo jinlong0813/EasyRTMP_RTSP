@@ -1,7 +1,6 @@
 package org.easydarwin.video;
 
 import android.content.Context;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -9,12 +8,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 
 /**
  * Created by John on 2016/3/12.
  */
-public class RTSPClient implements Closeable {
+public class Client implements Closeable {
 
     private static int sKey;
 
@@ -88,8 +86,8 @@ public class RTSPClient implements Closeable {
         }
     }
 
-    public interface RTSPSourceCallBack {
-        void onRTSPSourceCallBack(int _channelId, int _channelPtr, int _frameType, FrameInfo frameInfo);
+    public interface SourceCallBack {
+        void onSourceCallBack(int _channelId, int _channelPtr, int _frameType, FrameInfo frameInfo);
 
         void onMediaInfoCallBack(int _channelId, MediaInfo mi);
 
@@ -109,16 +107,16 @@ public class RTSPClient implements Closeable {
 
     public static final int TRANSTYPE_TCP = 1;
     public static final int TRANSTYPE_UDP = 2;
-    private static final String TAG = RTSPClient.class.getSimpleName();
+    private static final String TAG = Client.class.getSimpleName();
 
     static {
         System.loadLibrary("EasyRTSPClient");
     }
 
     private long mCtx;
-    private static final SparseArray<RTSPSourceCallBack> sCallbacks = new SparseArray<>();
+    private static final SparseArray<SourceCallBack> sCallbacks = new SparseArray<>();
 
-    RTSPClient(Context context, String key) {
+    Client(Context context, String key) {
         if (key == null) {
             throw new NullPointerException();
         }
@@ -131,14 +129,14 @@ public class RTSPClient implements Closeable {
         }
     }
 
-    int registerCallback(RTSPSourceCallBack cb) {
+    int registerCallback(SourceCallBack cb) {
         synchronized (sCallbacks) {
             sCallbacks.put(++sKey, cb);
             return sKey;
         }
     }
 
-    void unrigisterCallback(RTSPSourceCallBack cb) {
+    void unrigisterCallback(SourceCallBack cb) {
         synchronized (sCallbacks) {
             int idx = sCallbacks.indexOfValue(cb);
             if (idx != -1) {
@@ -169,10 +167,10 @@ public class RTSPClient implements Closeable {
         if (null == url) {
             throw new NullPointerException();
         }
-        return openStream(context, channel, url, trans_type, mediaType, user, pwd, 1000, 0);
+        return openStream(context, channel, url, trans_type, mediaType, user, pwd, 1000, 0, 0);
     }
 
-    private native int openStream(long context, int channel, String url, int type, int mediaType, String user, String pwd, int reconn, int outRtpPacket);
+    private native int openStream(long context, int channel, String url, int type, int mediaType, String user, String pwd, int reconn, int outRtpPacket, int rtspOption);
 
 //    private native int startRecord(int context, String path);
 //
@@ -180,12 +178,12 @@ public class RTSPClient implements Closeable {
 
     private native void closeStream(long context);
 
-    private static void onRTSPSourceCallBack(int _channelId, int _channelPtr, int _frameType, byte[] pBuf, byte[] frameBuffer) {
+    private static void onSourceCallBack(int _channelId, int _channelPtr, int _frameType, byte[] pBuf, byte[] frameBuffer) {
         if (_frameType == 0) {
             synchronized (sCallbacks) {
-                final RTSPSourceCallBack callBack = sCallbacks.get(_channelId);
+                final SourceCallBack callBack = sCallbacks.get(_channelId);
                 if (callBack != null) {
-                    callBack.onRTSPSourceCallBack(_channelId, _channelPtr, _frameType, null);
+                    callBack.onSourceCallBack(_channelId, _channelPtr, _frameType, null);
                 }
             }
             return;
@@ -193,7 +191,7 @@ public class RTSPClient implements Closeable {
 
         if (_frameType == EASY_SDK_MEDIA_INFO_FLAG) {
             synchronized (sCallbacks) {
-                final RTSPSourceCallBack callBack = sCallbacks.get(_channelId);
+                final SourceCallBack callBack = sCallbacks.get(_channelId);
                 if (callBack != null) {
                     MediaInfo mi = new MediaInfo();
 
@@ -253,9 +251,9 @@ public class RTSPClient implements Closeable {
         fi.buffer = pBuf;
 
         synchronized (sCallbacks) {
-            final RTSPSourceCallBack callBack = sCallbacks.get(_channelId);
+            final SourceCallBack callBack = sCallbacks.get(_channelId);
             if (callBack != null) {
-                callBack.onRTSPSourceCallBack(_channelId, _channelPtr, _frameType, fi);
+                callBack.onSourceCallBack(_channelId, _channelPtr, _frameType, fi);
             }
         }
     }
@@ -265,7 +263,7 @@ public class RTSPClient implements Closeable {
         Log.e(TAG, String.format("__RTSPClientCallBack onEvent: err=%d, state=%d", err, state));
 
         synchronized (sCallbacks) {
-            final RTSPSourceCallBack callBack = sCallbacks.get(channel);
+            final SourceCallBack callBack = sCallbacks.get(channel);
             if (callBack != null) {
                 callBack.onEvent(channel, err, state);
             }
