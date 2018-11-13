@@ -123,7 +123,7 @@ public class VideoCodec {
             decoder_close();
         }
 
-        protected int decodeFrame(RTSPClient.FrameInfo aFrame, byte[] rgbBuffer,
+        protected int decodeFrame(Client.FrameInfo aFrame, byte[] rgbBuffer,
                                   int[] size) {
             int nRet = 0;
             DecodeParam param = createReusableParam();
@@ -148,7 +148,7 @@ public class VideoCodec {
         }
 
         @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-        protected void decodeAndSnapAndDisplay(RTSPClient.FrameInfo frame) {
+        protected void decodeAndSnapAndDisplay(Client.FrameInfo frame) {
             try {
                 int result = decodeFrame(frame, mImageBufferReuse, mSize);
             } catch (Exception e) {

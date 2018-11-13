@@ -21,6 +21,6 @@
 -keepclassmembers class org.easydarwin.video.EasyRTSPClient {
    public *;
 }
--keepclassmembers class org.easydarwin.video.RTSPClient$FrameInfo{
+-keepclassmembers class org.easydarwin.video.Client$FrameInfo{
     *;
 }

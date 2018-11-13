@@ -4,7 +4,7 @@
 # App下载
 https://fir.im/EasyRTMPRTSP
 
-我们提供一个可以公网使用的RTMP服务器：http://www.easydss.com:10088/，将RTMP直播推流到rtmp://www.easydss.com:10085/hls/stream_id，即可在网页：http://www.easydss.com:10088/live.html 中看到自己的直播视频了，同时还会进行服务端录像与检索回放，录像下载等功能；
+我们提供一个可以公网使用的RTMP服务器：http://demo.easydss.com:10080/，将RTMP直播推流到rtmp://demo.easydss.com:10085/hls/stream_id，即可在网页：http://demo.easydss.com:10080 中看到自己的直播视频了，同时还会进行服务端录像与检索回放，录像下载等功能；
 
 ## 获取更多信息 ##
 

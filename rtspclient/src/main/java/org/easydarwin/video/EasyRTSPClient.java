@@ -3,16 +3,12 @@ package org.easydarwin.video;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
-import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaFormat;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Process;
 import android.os.ResultReceiver;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -32,7 +28,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,11 +37,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 import static org.easydarwin.util.CodecSpecificDataUtil.AUDIO_SPECIFIC_CONFIG_SAMPLING_RATE_TABLE;
-import static org.easydarwin.video.RTSPClient.TRANSTYPE_TCP;
+import static org.easydarwin.video.Client.TRANSTYPE_TCP;
 
-public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
+public class EasyRTSPClient implements Client.SourceCallBack {
     private static final long LEAST_FRAME_INTERVAL = 10000l;
 
     /* 视频编码 */
@@ -110,13 +104,13 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
     private Surface mSurface;
     private volatile Thread mThread, mAudioThread;
     private final ResultReceiver mRR;
-    private RTSPClient mClient;
+    private Client mClient;
     private boolean mAudioEnable = true;
     private volatile long mReceivedDataLength;
     private AudioTrack mAudioTrack;
     private String mRecordingPath;
     private EasyAACMuxer mObject;
-    private RTSPClient.MediaInfo mMediaInfo;
+    private Client.MediaInfo mMediaInfo;
     private short mHeight = 0;
     short mWidth = 0;
     private ByteBuffer mCSD0;
@@ -128,15 +122,15 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         return !TextUtils.isEmpty(mRecordingPath);
     }
 
-    private static class FrameInfoQueue extends PriorityQueue<RTSPClient.FrameInfo> {
+    private static class FrameInfoQueue extends PriorityQueue<Client.FrameInfo> {
         public static final int CAPACITY = 500;
         public static final int INITIAL_CAPACITY = 300;
 
         public FrameInfoQueue() {
-            super(INITIAL_CAPACITY, new Comparator<RTSPClient.FrameInfo>() {
+            super(INITIAL_CAPACITY, new Comparator<Client.FrameInfo>() {
 
                 @Override
-                public int compare(RTSPClient.FrameInfo frameInfo, RTSPClient.FrameInfo t1) {
+                public int compare(Client.FrameInfo frameInfo, Client.FrameInfo t1) {
                     return (int) (frameInfo.stamp - t1.stamp);
                 }
             });
@@ -171,7 +165,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             }
         }
 
-        public void put(RTSPClient.FrameInfo x) throws InterruptedException {
+        public void put(Client.FrameInfo x) throws InterruptedException {
             lock.lockInterruptibly();
             try {
                 int size;
@@ -196,11 +190,11 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             }
         }
 
-        public RTSPClient.FrameInfo takeVideoFrame() throws InterruptedException {
+        public Client.FrameInfo takeVideoFrame() throws InterruptedException {
             lock.lockInterruptibly();
             try {
                 while (true) {
-                    RTSPClient.FrameInfo x = peek();
+                    Client.FrameInfo x = peek();
                     if (x == null) {
                         notVideo.await();
                     } else {
@@ -219,11 +213,11 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             }
         }
 
-        public RTSPClient.FrameInfo takeVideoFrame(long ms) throws InterruptedException {
+        public Client.FrameInfo takeVideoFrame(long ms) throws InterruptedException {
             lock.lockInterruptibly();
             try {
                 while (true) {
-                    RTSPClient.FrameInfo x = peek();
+                    Client.FrameInfo x = peek();
                     if (x == null) {
                         if (!notVideo.await(ms, TimeUnit.MILLISECONDS)) return null;
                     } else {
@@ -242,11 +236,11 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             }
         }
 
-        public RTSPClient.FrameInfo takeAudioFrame() throws InterruptedException {
+        public Client.FrameInfo takeAudioFrame() throws InterruptedException {
             lock.lockInterruptibly();
             try {
                 while (true) {
-                    RTSPClient.FrameInfo x = peek();
+                    Client.FrameInfo x = peek();
                     if (x == null) {
                         notAudio.await();
                     } else {
@@ -333,7 +327,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         mTimeout = false;
         mNotSupportedVideoCB = mNotSupportedAudioCB = false;
         mReceivedDataLength = 0;
-        mClient = new RTSPClient(mContext, mKey);
+        mClient = new Client(mContext, mKey);
         int channel = mClient.registerCallback(this);
         mRecordingPath = recordPath;
         Log.i(TAG, String.format("playing url:\n%s\n", url));
@@ -415,7 +409,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             @Override
             public void run() {
                 {
-                    RTSPClient.FrameInfo frameInfo;
+                    Client.FrameInfo frameInfo;
                     long handle = 0;
 //                    final AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 //                    AudioManager.OnAudioFocusChangeListener l = new AudioManager.OnAudioFocusChangeListener() {
@@ -609,175 +603,6 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         return array.get(0);
     }
 
-//    private void startCodec() {
-//        final int delayUS = PreferenceManager.getDefaultSharedPreferences(mContext).getInt("delayUs", 0);
-//        mThread = new Thread("VIDEO_CONSUMER") {
-//
-//            @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-//            @Override
-//            public void run() {
-//                Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
-//                MediaCodec mCodec = null;
-//                VideoCodec.VideoDecoderLite mDecoder = null;
-//                try {
-//                    boolean pushBlankBuffersOnStop = true;
-//
-//                    int index = 0;
-//                    long previewStampUs = 0l;
-//                    long previewTickUs = 0l;
-//                    long differ = 0;
-//
-//                    long previewStampUs1 = 0;
-//                    MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-//                    while (mThread != null) {
-//                        RTSPClient.FrameInfo frameInfo;
-//                        if (mCodec == null && mDecoder == null) {
-//                            frameInfo = mQueue.takeVideoFrame();
-//                            try {
-//
-//                                MediaFormat format = MediaFormat.createVideoFormat("video/avc", mWidth, mHeight);
-//                                format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 0);
-//                                format.setInteger(MediaFormat.KEY_PUSH_BLANK_BUFFERS_ON_STOP, pushBlankBuffersOnStop ? 1 : 0);
-//                                if (mCSD0 != null) {
-//                                    format.setByteBuffer("csd-0", mCSD0);
-//                                } else {
-//                                    throw new InvalidParameterException("csd-0 is invalid.");
-//                                }
-//                                if (mCSD1 != null) {
-//                                    format.setByteBuffer("csd-1", mCSD1);
-//                                } else {
-//                                    throw new InvalidParameterException("csd-1 is invalid.");
-//                                }
-//                                MediaCodec codec = MediaCodec.createDecoderByType("video/avc");
-//                                Log.i(TAG, String.format("config codec:%s", format));
-//                                codec.configure(format, mSurface, null, 0);
-//                                codec.setVideoScalingMode(MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT);
-//                                codec.start();
-//                                mCodec = codec;
-//                            } catch (Throwable e) {
-//                                Log.e(TAG, String.format("init codec error due to %s", e.getMessage()));
-//                                e.fillInStackTrace();
-//                                final VideoCodec.VideoDecoderLite decoder = new VideoCodec.VideoDecoderLite();
-//                                decoder.create(frameInfo.width, frameInfo.height, mSurface);
-//                                mDecoder = decoder;
-//                            }
-////                            previewTickUs = mTexture.getTimestamp();
-//                            differ = previewTickUs - frameInfo.stamp;
-//                        } else {
-//                            frameInfo = mQueue.takeVideoFrame(5);
-//                        }
-//                        if (frameInfo != null) {
-//                            Log.d(TAG, "video " + frameInfo.stamp + " take[" + (frameInfo.stamp - previewStampUs1) + "]");
-//                            previewStampUs1 = frameInfo.stamp;
-//                        }
-//
-//                        if (mDecoder != null) {
-//                            long decodeBegin = System.currentTimeMillis();
-//                            mDecoder.decodeAndSnapAndDisplay(frameInfo);
-//                            long decodeSpend = System.currentTimeMillis() - decodeBegin;
-//
-//                            boolean firstFrame = previewStampUs == 0l;
-//                            if (firstFrame) {
-//                                Log.i(TAG, String.format("POST VIDEO_DISPLAYED!!!"));
-//                                ResultReceiver rr = mRR;
-//                                if (rr != null) rr.send(RESULT_VIDEO_DISPLAYED, null);
-//                            }
-//                            long current = frameInfo.stamp;
-//
-//                            if (previewStampUs != 0l) {
-//                                long sleepTime = current - previewStampUs - decodeSpend * 1000;
-//                                if (sleepTime > 0) {
-//                                    long cache = mNewestStample - frameInfo.stamp;
-//                                    sleepTime = fixSleepTime(sleepTime * 1000, cache, 0);
-//                                    if (sleepTime > 0) {
-//                                        Thread.sleep(sleepTime / 1000);
-//                                    }
-//                                }
-//                            }
-//                            previewStampUs = current;
-//                        } else {
-//                            do {
-//                                if (frameInfo != null) {
-//                                    byte[] pBuf = frameInfo.buffer;
-//                                    pumpVideoSample(frameInfo);
-//                                    index = mCodec.dequeueInputBuffer(10);
-//                                    if (index >= 0) {
-//                                        ByteBuffer buffer = mCodec.getInputBuffers()[index];
-//                                        buffer.clear();
-//                                        if (pBuf.length > buffer.remaining()) {
-//                                            mCodec.queueInputBuffer(index, 0, 0, frameInfo.stamp, 0);
-//                                        } else {
-//                                            buffer.put(pBuf, frameInfo.offset, frameInfo.length);
-//                                            mCodec.queueInputBuffer(index, 0, buffer.position(), frameInfo.stamp + differ, 0);
-//                                        }
-//                                        frameInfo = null;
-//                                    }
-//                                }
-//                                index = mCodec.dequeueOutputBuffer(info, 10); //
-//                                switch (index) {
-//                                    case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
-//                                        Log.i(TAG, "INFO_OUTPUT_BUFFERS_CHANGED");
-//                                        break;
-//                                    case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
-//                                        MediaFormat mf = mCodec.getOutputFormat();
-//                                        Log.i(TAG, "INFO_OUTPUT_FORMAT_CHANGED ：" +mf);
-//                                        break;
-//                                    case MediaCodec.INFO_TRY_AGAIN_LATER:
-//                                        // 输出为空
-//                                        break;
-//                                    default:
-//                                        // 输出队列不为空
-//                                        // -1表示为第一帧数据
-//                                        long newSleepUs = -1;
-//                                        boolean firstTime = previewStampUs == 0l;
-//                                        if (!firstTime) {
-//                                            long sleepUs = (info.presentationTimeUs - previewStampUs);
-//                                            if (sleepUs > 1000000) {
-//                                                // 时间戳异常，可能服务器丢帧了。
-//                                                newSleepUs = 0l;
-//                                            } else {
-//                                                long cache = mNewestStample - previewStampUs;
-//                                                newSleepUs = fixSleepTime(sleepUs, cache, 000000);
-////                                        Log.d(TAG, String.format("sleepUs:%d,newSleepUs:%d,Cache:%d", sleepUs, newSleepUs, cache));
-//                                            }
-//                                        }
-//                                        previewStampUs = info.presentationTimeUs;
-//
-//                                        if (true && Build.VERSION.SDK_INT >= 21) {
-//                                            Log.d(TAG, String.format("releaseoutputbuffer:%d,stampUs:%d", index, previewStampUs));
-//                                            mCodec.releaseOutputBuffer(index, previewStampUs);
-//                                        } else {
-//                                            if (newSleepUs < 0) {
-//                                                newSleepUs = 0;
-//                                            }
-//                                            Thread.sleep(newSleepUs / 1000);
-//                                            mCodec.releaseOutputBuffer(index, true);
-//                                        }
-//                                        if (firstTime) {
-//                                            Log.i(TAG, String.format("POST VIDEO_DISPLAYED!!!"));
-//                                            ResultReceiver rr = mRR;
-//                                            if (rr != null) rr.send(RESULT_VIDEO_DISPLAYED, null);
-//                                        }
-//                                }
-//                            } while (frameInfo != null || index < MediaCodec.INFO_TRY_AGAIN_LATER);
-//                        }
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                } finally {
-//                    if (mCodec != null) {
-//                        mCodec.stop();
-//                        mCodec.release();
-//                    }
-//                    if (mDecoder != null) {
-//                        mDecoder.close();
-//                    }
-//                }
-//            }
-//        };
-//        mThread.start();
-//    }
-
     private static final long fixSleepTime(long sleepTimeUs, long totalTimestampDifferUs, long delayUs) {
         double dValue = ((double) (delayUs - totalTimestampDifferUs)) / 1000000d;
         double radio = Math.exp(dValue);
@@ -838,31 +663,6 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         return -1;
     }
 
-//    private void pumpAACSample(RTSPClient.FrameInfo frameInfo) {
-//        EasyMuxer muxer = mObject;
-//        if (muxer == null) return;
-//        MediaCodec.BufferInfo bi = new MediaCodec.BufferInfo();
-//        bi.offset = frameInfo.offset;
-//        bi.size = frameInfo.length;
-//        ByteBuffer buffer = ByteBuffer.wrap(frameInfo.buffer, bi.offset, bi.size);
-//        bi.presentationTimeUs = frameInfo.stamp;
-//
-//        try {
-//            if (!frameInfo.audio) {
-//                throw new IllegalArgumentException("frame should be audio!");
-//            }
-//            if (frameInfo.codec != EASY_SDK_AUDIO_CODEC_AAC){
-//                throw new IllegalArgumentException("audio codec should be aac!");
-//            }
-//            bi.offset += 7;
-//            bi.size -= 7;
-//            muxer.pumpStream(buffer, bi, false);
-//        } catch (IllegalStateException ex) {
-//            ex.printStackTrace();
-//        }
-//    }
-
-
     private void pumpPCMSample(byte[] pcm, int length, long stampUS) {
         EasyAACMuxer muxer = mObject;
         if (muxer == null) return;
@@ -872,30 +672,6 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             e.printStackTrace();
         }
     }
-
-
-//    private void pumpVideoSample(RTSPClient.FrameInfo frameInfo) {
-//        EasyMuxer muxer = mObject;
-//        if (muxer == null) return;
-//        MediaCodec.BufferInfo bi = new MediaCodec.BufferInfo();
-//        bi.offset = frameInfo.offset;
-//        bi.size = frameInfo.length;
-//        ByteBuffer buffer = ByteBuffer.wrap(frameInfo.buffer, bi.offset, bi.size);
-//        bi.presentationTimeUs = frameInfo.stamp;
-//        try {
-//            if (frameInfo.audio) {
-//                throw new IllegalArgumentException("frame should be video!");
-//            }
-//            if (frameInfo.type != 1) {
-//                bi.flags = 0;
-//            } else {
-//                bi.flags = MediaCodec.BUFFER_FLAG_KEY_FRAME;
-//            }
-//            muxer.pumpStream(buffer, bi, true);
-//        } catch (IllegalStateException ex) {
-//            ex.printStackTrace();
-//        }
-//    }
 
     public synchronized void stopRecord() {
         mRecordingPath = null;
@@ -911,12 +687,12 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
-    public void onRTSPSourceCallBack(int _channelId, int _channelPtr, int _frameType, RTSPClient.FrameInfo frameInfo) {
+    public void onSourceCallBack(int _channelId, int _channelPtr, int _frameType, Client.FrameInfo frameInfo) {
         Thread.currentThread().setName("PRODUCER_THREAD");
         if (frameInfo != null) {
             mReceivedDataLength += frameInfo.length;
         }
-        if (_frameType == RTSPClient.EASY_SDK_VIDEO_FRAME_FLAG) {
+        if (_frameType == Client.EASY_SDK_VIDEO_FRAME_FLAG) {
             if (frameInfo.codec != EASY_SDK_VIDEO_CODEC_H264) {
                 ResultReceiver rr = mRR;
                 if (!mNotSupportedVideoCB && rr != null) {
@@ -941,18 +717,11 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                 }
             }
 
-//            int offset = frameInfo.offset;
-//            byte nal_unit_type = (byte) (frameInfo.buffer[offset + 4] & (byte) 0x1F);
-//            if (nal_unit_type == 7 || nal_unit_type == 5) {
-//                Log.i(TAG,String.format("recv I frame"));
-//            }
-
             if (frameInfo.type == 1) {
                 Log.i(TAG, String.format("recv I frame"));
             }
 
-//            boolean firstFrame = mNewestStample == 0;
-            frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
+            //frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
             frameInfo.audio = false;
             if (mWaitingKeyFrame) {
 
@@ -963,34 +732,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                 mWidth = frameInfo.width;
                 mHeight = frameInfo.height;
 
-
                 Log.i(TAG, String.format("width:%d,height:%d", mWidth, mHeight));
-
-//                byte[] dataOut = new byte[128];
-//                int[] outLen = new int[]{128};
-//                int result = getXPS(frameInfo.buffer, 0, frameInfo.buffer.length, dataOut, outLen, 7);
-//                if (result >= 0) {
-//                    ByteBuffer csd0 = ByteBuffer.allocate(outLen[0]);
-//                    csd0.put(dataOut, 0, outLen[0]);
-//                    csd0.clear();
-//                    mCSD0 = csd0;
-//                    Log.i(TAG, String.format("CSD-0 searched"));
-//                }
-//                outLen[0] = 128;
-//                result = getXPS(frameInfo.buffer, 0, frameInfo.buffer.length, dataOut, outLen, 8);
-//                if (result >= 0) {
-//                    ByteBuffer csd1 = ByteBuffer.allocate(outLen[0]);
-//                    csd1.put(dataOut, 0, outLen[0]);
-//                    csd1.clear();
-//                    mCSD1 = csd1;
-//                    Log.i(TAG, String.format("CSD-1 searched"));
-//                }
-//
-//                if (false) {
-//                    int off = (result - frameInfo.offset);
-//                    frameInfo.offset += off;
-//                    frameInfo.length -= off;
-//                }
                 Log.i(TAG, String.format("RESULT_VIDEO_SIZE:%d*%d", frameInfo.width, frameInfo.height));
                 if (rr != null) rr.send(RESULT_VIDEO_SIZE, bundle);
 
@@ -1005,24 +747,19 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                     }
                 }
 
-                mPusher.initPush(mRtmpUrl, mContext, mRtmpCallBack);
+                mPusher.initPush(mRtmpUrl, mContext, mRtmpCallBack, 25, mMediaInfo.sample, mMediaInfo.channel);
             }
-//            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
-//            try {frameInfo.stamp
-//                mQueue.put(frameInfo);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+
             if(mPusher != null) {
-                mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, frameInfo.stamp, EasyRTMP.FrameType.FRAME_TYPE_VIDEO);
+                mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, 0, EasyRTMP.FrameType.FRAME_TYPE_VIDEO);
             }
-        } else if (_frameType == RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG) {
-            frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
+        } else if (_frameType == Client.EASY_SDK_AUDIO_FRAME_FLAG) {
+            //frameInfo.stamp = frameInfo.timestamp_sec*1000+frameInfo.timestamp_usec/1000;
             frameInfo.audio = true;
 
             if(frameInfo.codec == EASY_SDK_AUDIO_CODEC_AAC){
                 if(mPusher != null) {
-                    mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, frameInfo.stamp, EasyRTMP.FrameType.FRAME_TYPE_AUDIO);
+                    mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, 0, EasyRTMP.FrameType.FRAME_TYPE_AUDIO);
                 }
             } else if(frameInfo.codec == EASY_SDK_AUDIO_CODEC_G711A ||
                     frameInfo.codec == EASY_SDK_AUDIO_CODEC_G711U ||
@@ -1056,18 +793,18 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                 ResultReceiver rr = mRR;
                 if (rr != null) rr.send(RESULT_TIMEOUT, null);
             }
-        } else if (_frameType == RTSPClient.EASY_SDK_EVENT_FRAME_FLAG) {
+        } else if (_frameType == Client.EASY_SDK_EVENT_FRAME_FLAG) {
             ResultReceiver rr = mRR;
             Bundle resultData = new Bundle();
             resultData.putString("event-msg", new String(frameInfo.buffer));
             if (rr != null) rr.send(RESULT_EVENT, null);
-        } else if(_frameType == RTSPClient.EASY_SDK_MEDIA_INFO_FLAG) {
+        } else if(_frameType == Client.EASY_SDK_MEDIA_INFO_FLAG) {
 
         }
     }
 
     @Override
-    public void onMediaInfoCallBack(int _channelId, RTSPClient.MediaInfo mi) {
+    public void onMediaInfoCallBack(int _channelId, Client.MediaInfo mi) {
         mMediaInfo = mi;
         Log.i(TAG, String.format("MediaInfo fetchd\n%s", mi));
     }

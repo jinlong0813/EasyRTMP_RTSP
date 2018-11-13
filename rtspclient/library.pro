@@ -76,6 +76,6 @@
    public *;
 }
 
--keepclassmembers class org.easydarwin.video.RTSPClient {
+-keepclassmembers class org.easydarwin.video.Client {
     private static void onRTSPSourceCallBack(int,int,int,byte[],byte[]);
 }
