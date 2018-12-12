@@ -441,19 +441,7 @@ public class EasyRTSPClient implements Client.SourceCallBack {
 //                    };
                     try {
                         frameInfo = mQueue.takeAudioFrame();
-//                        final Thread t = Thread.currentThread();
-//                        int requestCode = am.requestAudioFocus(l, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-//                        if (requestCode !=  AUDIOFOCUS_REQUEST_GRANTED){
-//                            return;
-//                        }
-//                        if (mAudioTrack == null) {
-//                            int sampleRateInHz = (int) (frameInfo.sample_rate * 1.05);
-//                            int channelConfig = frameInfo.channels == 1 ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;
-//                            int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-//                            int bfSize = AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat) * 4;
-//                            mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRateInHz, channelConfig, audioFormat, bfSize, AudioTrack.MODE_STREAM);
-//                        }
-//                        mAudioTrack.play();
+
                         handle = AudioCodec.create(frameInfo.codec, frameInfo.sample_rate, frameInfo.channels, 16);
 
                         Log.w(TAG, String.format("POST VIDEO_DISPLAYED IN AUDIO THREAD!!!"));
