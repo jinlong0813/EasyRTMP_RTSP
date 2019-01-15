@@ -359,14 +359,6 @@ public class EasyRTSPClient implements Client.SourceCallBack {
      */
     public void stop() {
         Thread t = mThread;
-//        mThread = null;
-//        t.interrupt();
-//        try {
-//            t.join();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
         t = mAudioThread;
         mAudioThread = null;
         t.interrupt();
@@ -411,34 +403,7 @@ public class EasyRTSPClient implements Client.SourceCallBack {
                 {
                     Client.FrameInfo frameInfo;
                     long handle = 0;
-//                    final AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-//                    AudioManager.OnAudioFocusChangeListener l = new AudioManager.OnAudioFocusChangeListener() {
-//                        @Override
-//                        public void onAudioFocusChange(int focusChange) {
-//                            if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
-//                                AudioTrack audioTrack = mAudioTrack;
-//                                if (audioTrack != null) {
-//                                    audioTrack.setStereoVolume(1.0f, 1.0f);
-//                                    if (audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PAUSED) {
-//                                        audioTrack.flush();
-//                                        audioTrack.play();
-//                                    }
-//                                }
-//                            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-//                                AudioTrack audioTrack = mAudioTrack;
-//                                if (audioTrack != null) {
-//                                    if (audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
-//                                        audioTrack.pause();
-//                                    }
-//                                }
-//                            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
-//                                AudioTrack audioTrack = mAudioTrack;
-//                                if (audioTrack != null) {
-//                                    audioTrack.setStereoVolume(0.5f, 0.5f);
-//                                }
-//                            }
-//                        }
-//                    };
+
                     try {
                         frameInfo = mQueue.takeAudioFrame();
 
@@ -579,12 +544,7 @@ public class EasyRTSPClient implements Client.SourceCallBack {
                 array.add(name);
             }
         }
-//        if (array.remove("OMX.qcom.video.decoder.avc")) {
-//            array.add("OMX.qcom.video.decoder.avc");
-//        }
-//        if (array.remove("OMX.amlogic.avc.decoder.awesome")) {
-//            array.add("OMX.amlogic.avc.decoder.awesome");
-//        }
+
         if (array.isEmpty()) {
             return "";
         }
@@ -801,31 +761,7 @@ public class EasyRTSPClient implements Client.SourceCallBack {
     public void onEvent(int channel, int err, int info) {
         ResultReceiver rr = mRR;
         Bundle resultData = new Bundle();
-        /*
-            int state = 0;
-        int err = EasyRTSP_GetErrCode(fRTSPHandle);
-		// EasyRTSPClient开始进行连接，建立EasyRTSPClient连接线程
-		if (NULL == _pBuf && NULL == _frameInfo)
-		{
-			LOGD("Recv Event: Connecting...");
-			state = 1;
-		}
 
-		// EasyRTSPClient RTSPClient连接错误，错误码通过EasyRTSP_GetErrCode()接口获取，比如404
-		else if (NULL != _frameInfo && _frameInfo->codec == EASY_SDK_EVENT_CODEC_ERROR)
-		{
-			LOGD("Recv Event: Error:%d ...\n", err);
-			state = 2;
-		}
-
-		// EasyRTSPClient连接线程退出，此时上层应该停止相关调用，复位连接按钮等状态
-		else if (NULL != _frameInfo && _frameInfo->codec == EASY_SDK_EVENT_CODEC_EXIT)
-		{
-			LOGD("Recv Event: Exit,Error:%d ...", err);
-			state = 3;
-		}
-
-        * */
         switch (info) {
             case 1:
                 resultData.putString("event-msg", "EasyRTSPClient 连接中...");

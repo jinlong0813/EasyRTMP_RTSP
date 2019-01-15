@@ -46,19 +46,6 @@ public class Client implements Closeable {
     }
 
     public static final class MediaInfo {
-//        Easy_U32 u32VideoCodec;				/*  ”∆µ±‡¬Î¿‡–Õ */
-//        Easy_U32 u32VideoFps;				/*  ”∆µ÷°¬  */
-//
-//        Easy_U32 u32AudioCodec;				/* “Ù∆µ±‡¬Î¿‡–Õ */
-//        Easy_U32 u32AudioSamplerate;		/* “Ù∆µ≤…—˘¬  */
-//        Easy_U32 u32AudioChannel;			/* “Ù∆µÕ®µ¿ ˝ */
-//        Easy_U32 u32AudioBitsPerSample;		/* “Ù∆µ≤…—˘æ´∂» */
-//
-//        Easy_U32 u32H264SpsLength;			/*  ”∆µsps÷°≥§∂» */
-//        Easy_U32 u32H264PpsLength;			/*  ”∆µpps÷°≥§∂» */
-//        Easy_U8	 u8H264Sps[128];			/*  ”∆µsps÷°ƒ⁄»› */
-//        Easy_U8	 u8H264Pps[36];				/*  ”∆µsps÷°ƒ⁄»› */
-
         int videoCodec;
         int fps;
         int audioCodec;
