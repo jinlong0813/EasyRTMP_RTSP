@@ -1,19 +1,14 @@
 # EasyRTMP_RTSP
-基于Android手机、设备拉取远程RTSP流到本地，再转成RTMP，推送到标准的RTMP服务器（例如EasyDSS、nginx-rtmp、crtmpserver等等）。其他平台RTSP转RTMP参考https://github.com/EasyDarwin/EasyRTMP
-
-# App下载
-https://fir.im/EasyRTMPRTSP
-
-我们提供一个可以公网使用的RTMP服务器：http://demo.easydss.com:10080/，将RTMP直播推流到rtmp://demo.easydss.com:10085/hls/stream_id，即可在网页：http://demo.easydss.com:10080 中看到自己的直播视频了，同时还会进行服务端录像与检索回放，录像下载等功能；
+基于Android手机、设备拉取远程RTSP流到本地，再转成RTMP，推送到标准的RTMP服务器（例如EasyDSS、nginx-rtmp、crtmpserver等等）。
 
 ## 获取更多信息 ##
 
-邮件：[support@easydarwin.org](mailto:support@easydarwin.org) 
+邮件：[support@liveqing.com](mailto:support@liveqing.com) 
 
-WEB：[www.EasyDarwin.org](http://www.easydarwin.org)
+技术交流QQ群：[947137753](https://jq.qq.com/?_wv=1027&k=5jyYA4C)
 
-QQ交流群：[587254841](https://jq.qq.com/?_wv=1027&k=4ASE72a)
+咨询电话：15156896292
 
-Copyright &copy; EasyDarwin.org 2012-2018
+试用下载：[https://gitee.com/liveqing/ReleaseVersion/](https://gitee.com/liveqing/ReleaseVersion/ "LiveGBS")
 
-![EasyDarwin](http://www.easydarwin.org/skin/easydarwin/images/wx_qrcode.jpg)
+**LiveQing**视频流媒体无插件直播方案：[www.liveqing.com](http://www.liveqing.com)
