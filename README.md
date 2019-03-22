@@ -9,6 +9,4 @@
 
 咨询电话：15156896292
 
-试用下载：[https://gitee.com/liveqing/ReleaseVersion/](https://gitee.com/liveqing/ReleaseVersion/ "LiveGBS")
-
 **LiveQing**视频流媒体无插件直播方案：[www.liveqing.com](http://www.liveqing.com)
