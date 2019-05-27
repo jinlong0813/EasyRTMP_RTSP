@@ -1,9 +1,4 @@
-/*
-	Copyright (c) 2012-2018 EasyDarwin.ORG.  All rights reserved.
-	Github: https://github.com/EasyDarwin
-	WEChat: EasyDarwin
-	Website: http://www.easydarwin.org
-*/
+
 package org.easydarwin.easyrtmp_rtsp;
 
 import android.app.Application;

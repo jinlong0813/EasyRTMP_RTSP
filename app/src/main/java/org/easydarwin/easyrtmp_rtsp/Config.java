@@ -1,9 +1,3 @@
-/*
-	Copyright (c) 2012-2018 EasyDarwin.ORG.  All rights reserved.
-	Github: https://github.com/EasyDarwin
-	WEChat: EasyDarwin
-	Website: http://www.easydarwin.org
-*/
 
 package org.easydarwin.easyrtmp_rtsp;
 
@@ -12,9 +6,9 @@ package org.easydarwin.easyrtmp_rtsp;
  */
 public class Config {
     public static final String RTSP_URL = "RTSPUrl";
-    public static final String DEFAULT_RTSP_URL = "rtsp://admin:admin@192.168.1.222/22";
+    public static final String DEFAULT_RTSP_URL = "rtsp://admin:zljk@12345@221.226.220.38:5504/Streaming/Channels/102";
 
     public static final String SERVER_URL = "serverUrl";
-    public static final String DEFAULT_SERVER_URL = "rtmp://demo.easydss.com:10085/live/stream_"+String.valueOf((int) (Math.random() * 1000000 + 100000));
+    public static final String DEFAULT_SERVER_URL = "rtmp://demo.liveqing.com:10085/hls/stream_"+String.valueOf((int) (Math.random() * 1000000 + 100000));
 
 }
